@@ -86,7 +86,7 @@ def is_travel_plausible(user_id: int, lat: float, lng: float) -> bool:
 
 def is_first_ever_visit(db: Session, user_id: int, restaurant_id: int) -> bool:
     prior = db.execute(
-        select(Checkin.id)
+        select(Checkin.user_id)
         .where(Checkin.user_id == user_id, Checkin.restaurant_id == restaurant_id)
         .limit(1)
     ).scalar_one_or_none()

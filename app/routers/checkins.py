@@ -23,7 +23,6 @@ class CheckinCreate(BaseModel):
 
 
 class CheckinResponse(BaseModel):
-    id: int
     user_id: int
     restaurant_id: int
     photo_url: str | None

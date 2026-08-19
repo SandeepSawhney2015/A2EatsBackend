@@ -72,3 +72,34 @@ class TestLeaderboardShowsUsername:
         client.post("/checkins", json=checkin_payload(make_restaurant()), headers=auth_header)
         board = client.get("/leaderboard/users").json()
         assert board[0]["username"] == "testuser"
+        assert board[0]["profile_picture_url"] is None
+        assert "full_name" not in board[0]
+
+
+class TestProfilePicture:
+    def test_defaults_to_none(self, client, auth_header):
+        assert client.get("/users/me", headers=auth_header).json()["profile_picture_url"] is None
+
+    def test_set_and_read_back(self, client, auth_header):
+        url = "https://cdn.example.com/avatars/me.jpg"
+        r = client.patch(
+            "/users/me/profile-picture",
+            json={"profile_picture_url": url},
+            headers=auth_header,
+        )
+        assert r.status_code == 200
+        assert r.json()["profile_picture_url"] == url
+        assert client.get("/users/me", headers=auth_header).json()["profile_picture_url"] == url
+
+    def test_appears_on_leaderboard(self, client, auth_header, make_restaurant):
+        from tests.conftest import checkin_payload
+
+        url = "https://cdn.example.com/avatars/me.jpg"
+        client.patch("/users/me/profile-picture", json={"profile_picture_url": url}, headers=auth_header)
+        client.post("/checkins", json=checkin_payload(make_restaurant()), headers=auth_header)
+        board = client.get("/leaderboard/users").json()
+        assert board[0]["profile_picture_url"] == url
+
+    def test_requires_auth(self, client):
+        r = client.patch("/users/me/profile-picture", json={"profile_picture_url": "x"})
+        assert r.status_code in (401, 403)

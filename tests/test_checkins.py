@@ -17,10 +17,17 @@ class TestCheckinValidation:
     def test_unknown_restaurant_is_404(self, client, auth_header):
         r = client.post(
             "/checkins",
-            json={"restaurant_id": 999, "latitude": 42.0, "longitude": -83.0},
+            json={"restaurant_id": 999, "latitude": 42.0, "longitude": -83.0, "photo_url": "https://pub-test.r2.dev/x.jpg"},
             headers=auth_header,
         )
         assert r.status_code == 404
+
+    def test_checkin_without_photo_is_rejected(self, client, auth_header, make_restaurant):
+        rest = make_restaurant()
+        payload = checkin_payload(rest)
+        del payload["photo_url"]
+        r = client.post("/checkins", json=payload, headers=auth_header)
+        assert r.status_code == 422
 
     def test_requires_auth(self, client, make_restaurant):
         r = client.post("/checkins", json=checkin_payload(make_restaurant()))

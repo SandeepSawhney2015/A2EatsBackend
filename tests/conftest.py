@@ -14,6 +14,11 @@ from unittest.mock import patch
 os.environ["DATABASE_URL"] = "sqlite:///./_test.db"
 os.environ["REDIS_URL"] = "redis://localhost:6379/1"
 os.environ["JWT_SECRET"] = "test-secret-not-for-production-padding-to-32-bytes"
+# Tests must never touch real photo storage; blank these regardless of .env.
+os.environ["S3_BUCKET"] = ""
+os.environ["S3_REGION"] = "us-east-2"
+os.environ["S3_ENDPOINT_URL"] = ""
+os.environ["S3_PUBLIC_BASE_URL"] = ""
 
 import pytest
 from fastapi.testclient import TestClient
@@ -103,5 +108,6 @@ def checkin_payload(restaurant, lat=None, lng=None, **extra):
         "restaurant_id": restaurant["id"],
         "latitude": lat if lat is not None else restaurant["latitude"],
         "longitude": lng if lng is not None else restaurant["longitude"],
+        "photo_url": "https://pub-test.r2.dev/checkin/1/test.jpg",
         **extra,
     }

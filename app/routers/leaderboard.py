@@ -12,6 +12,7 @@ class UserEntry(BaseModel):
     rank: int
     user_id: int
     username: str
+    profile_picture_url: str | None
     points: int
 
 

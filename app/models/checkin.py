@@ -24,5 +24,5 @@ class Checkin(Base):
         default=lambda: datetime.now(timezone.utc),
     )
     restaurant_id: Mapped[int] = mapped_column(ForeignKey("restaurants.id"), index=True)
-    photo_url: Mapped[str | None] = mapped_column(String, nullable=True)
+    photo_url: Mapped[str] = mapped_column(String)
     points: Mapped[int] = mapped_column(Integer, default=10)

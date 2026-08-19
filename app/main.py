@@ -4,7 +4,15 @@ from fastapi import FastAPI
 
 import app.models  # noqa: F401 — register all tables with Base before create_all
 from app.db import Base, engine
-from app.routers import apple_auth, checkins, health, leaderboard, restaurants, users
+from app.routers import (
+    apple_auth,
+    checkins,
+    health,
+    leaderboard,
+    restaurants,
+    uploads,
+    users,
+)
 
 
 @asynccontextmanager
@@ -26,6 +34,7 @@ app.include_router(users.router)
 app.include_router(restaurants.router)
 app.include_router(checkins.router)
 app.include_router(leaderboard.router)
+app.include_router(uploads.router)
 
 
 @app.get("/")

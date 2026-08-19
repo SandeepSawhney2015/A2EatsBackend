@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -19,13 +19,14 @@ class CheckinCreate(BaseModel):
     restaurant_id: int
     latitude: float
     longitude: float
-    photo_url: str | None = None
+    # A check-in is proof you ate there — the photo is required.
+    photo_url: str = Field(min_length=1, max_length=2000)
 
 
 class CheckinResponse(BaseModel):
     user_id: int
     restaurant_id: int
-    photo_url: str | None
+    photo_url: str
     points: int
     created_at: datetime
 

@@ -5,7 +5,7 @@ import jwt as pyjwt
 
 class TestAppleSignIn:
     def test_returns_access_and_refresh_tokens(self, client, apple_stub):
-        r = client.post("/auth/apple", json={"identity_token": "stub"})
+        r = client.post("/auth/apple", json={"identity_token": "stub", "username": "authuser"})
         assert r.status_code == 200
         body = r.json()
         assert body["access_token"]
@@ -29,8 +29,8 @@ class TestAppleSignIn:
         assert r.status_code == 401
 
     def test_signing_in_twice_reuses_the_same_user(self, client, apple_stub):
-        h1 = {"Authorization": f"Bearer {client.post('/auth/apple', json={'identity_token': 's'}).json()['access_token']}"}
-        h2 = {"Authorization": f"Bearer {client.post('/auth/apple', json={'identity_token': 's'}).json()['access_token']}"}
+        h1 = {"Authorization": f"Bearer {client.post('/auth/apple', json={'identity_token': 's', 'username': 'authuser'}).json()['access_token']}"}
+        h2 = {"Authorization": f"Bearer {client.post('/auth/apple', json={'identity_token': 's', 'username': 'authuser'}).json()['access_token']}"}
         assert client.get("/users/me", headers=h1).json()["id"] == client.get("/users/me", headers=h2).json()["id"]
 
     def test_email_saved_on_first_sign_in(self, client, apple_stub, auth_header):
@@ -40,14 +40,14 @@ class TestAppleSignIn:
 
 class TestRefresh:
     def test_refresh_returns_new_pair(self, client, apple_stub):
-        tokens = client.post("/auth/apple", json={"identity_token": "s"}).json()
+        tokens = client.post("/auth/apple", json={"identity_token": "s", "username": "authuser"}).json()
         r = client.post("/auth/refresh", json={"refresh_token": tokens["refresh_token"]})
         assert r.status_code == 200
         assert r.json()["access_token"]
         assert r.json()["refresh_token"] != tokens["refresh_token"]
 
     def test_old_refresh_token_dies_after_rotation(self, client, apple_stub):
-        tokens = client.post("/auth/apple", json={"identity_token": "s"}).json()
+        tokens = client.post("/auth/apple", json={"identity_token": "s", "username": "authuser"}).json()
         client.post("/auth/refresh", json={"refresh_token": tokens["refresh_token"]})
         r = client.post("/auth/refresh", json={"refresh_token": tokens["refresh_token"]})
         assert r.status_code == 401
@@ -57,7 +57,7 @@ class TestRefresh:
         assert r.status_code == 401
 
     def test_refreshed_access_token_works(self, client, apple_stub):
-        tokens = client.post("/auth/apple", json={"identity_token": "s"}).json()
+        tokens = client.post("/auth/apple", json={"identity_token": "s", "username": "authuser"}).json()
         new = client.post("/auth/refresh", json={"refresh_token": tokens["refresh_token"]}).json()
         r = client.get("/users/me", headers={"Authorization": f"Bearer {new['access_token']}"})
         assert r.status_code == 200
@@ -65,7 +65,7 @@ class TestRefresh:
 
 class TestLogout:
     def test_logout_revokes_the_session(self, client, apple_stub):
-        tokens = client.post("/auth/apple", json={"identity_token": "s"}).json()
+        tokens = client.post("/auth/apple", json={"identity_token": "s", "username": "authuser"}).json()
         r = client.post("/auth/logout", json={"refresh_token": tokens["refresh_token"]})
         assert r.status_code == 204
         r = client.post("/auth/refresh", json={"refresh_token": tokens["refresh_token"]})

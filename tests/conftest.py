@@ -50,9 +50,25 @@ def apple_stub():
 
 @pytest.fixture
 def auth_header(client, apple_stub):
-    """Sign in and return the Authorization header for the test user."""
-    tokens = client.post("/auth/apple", json={"identity_token": "stub"}).json()
+    """Sign up and return the Authorization header for the test user."""
+    tokens = client.post(
+        "/auth/apple", json={"identity_token": "stub", "username": "testuser"}
+    ).json()
     return {"Authorization": f"Bearer {tokens['access_token']}"}
+
+
+@pytest.fixture
+def sign_up(client):
+    """Sign up an arbitrary extra user: sign_up('somesub', 'somename')."""
+
+    def _sign_up(apple_sub, username):
+        claims = {"sub": apple_sub, "email": f"{apple_sub}@example.com"}
+        with patch("app.routers.apple_auth.verify_apple_token", return_value=claims):
+            return client.post(
+                "/auth/apple", json={"identity_token": "stub", "username": username}
+            )
+
+    return _sign_up
 
 
 @pytest.fixture

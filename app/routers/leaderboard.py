@@ -11,7 +11,7 @@ router = APIRouter(prefix="/leaderboard", tags=["leaderboard"])
 class UserEntry(BaseModel):
     rank: int
     user_id: int
-    name: str | None
+    username: str
     points: int
 
 

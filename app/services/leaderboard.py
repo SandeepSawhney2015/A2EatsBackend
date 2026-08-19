@@ -34,17 +34,17 @@ def top_users(db: Session) -> list[dict]:
         rows = db.execute(
             select(
                 User.id,
-                User.full_name,
+                User.username,
                 func.sum(Checkin.points).label("points"),
             )
             .join(Checkin, Checkin.user_id == User.id)
-            .group_by(User.id, User.full_name)
+            .group_by(User.id, User.username)
             .order_by(desc("points"), User.id)
             .limit(TOP_N)
         ).all()
         return [
-            {"rank": i + 1, "user_id": uid, "name": name, "points": int(points)}
-            for i, (uid, name, points) in enumerate(rows)
+            {"rank": i + 1, "user_id": uid, "username": username, "points": int(points)}
+            for i, (uid, username, points) in enumerate(rows)
         ]
 
     return _cached(_USERS_KEY, compute)

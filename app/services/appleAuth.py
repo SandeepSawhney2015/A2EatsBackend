@@ -1,5 +1,6 @@
 import jwt
 from jwt import PyJWKClient
+from app.core.config import get_settings
 
 APPLE_KEYS_URL = "https://appleid.apple.com/auth/keys"
 APPLE_ISSUER = "https://appleid.apple.com"
@@ -12,7 +13,7 @@ def verify_apple_token(token: str) -> dict:
         token,
         signing_key.key,
         algorithms=["RS256"],
-        audience=audience,
+        audience=get_settings().apple_bundle_id,
         issuer=APPLE_ISSUER,
     )
     return decode

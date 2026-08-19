@@ -12,8 +12,12 @@ from app.models.checkin import Checkin
 MAX_DISTANCE_FEET = 200
 FIRST_VISIT_POINTS = 10
 REPEAT_VISIT_POINTS = 5
-MULTIPLIER_STEP = 0.25
-MULTIPLIER_CAP = 5.0
+# Nobody eats out more than this in one day.
+MAX_CHECKINS_PER_DAY = 10
+# The multiplier maxes out at 5x, reached by the (MAX/2)th check-in of the
+# day: 1x, 2x, 3x, 4x, 5x, then flat. Both derive from the daily cap.
+MULTIPLIER_CAP = MAX_CHECKINS_PER_DAY / 2
+MULTIPLIER_STEP = (MULTIPLIER_CAP - 1) / (MAX_CHECKINS_PER_DAY / 2 - 1)
 RATE_LIMIT_SECONDS = 24 * 60 * 60
 # Must wait between ANY two check-ins — you have to actually eat somewhere
 # before checking in at the next place.
@@ -60,6 +64,12 @@ def seconds_until_next_checkin(user_id: int) -> int:
         return 0
     elapsed = time.time() - json.loads(last)["ts"]
     return max(0, int(MIN_INTERVAL_SECONDS - elapsed))
+
+
+def daily_limit_reached(user_id: int) -> bool:
+    """True if the user already hit today's check-in cap."""
+    count = get_redis().get(_daily_key(user_id))
+    return count is not None and int(count) >= MAX_CHECKINS_PER_DAY
 
 
 def is_travel_plausible(user_id: int, lat: float, lng: float) -> bool:

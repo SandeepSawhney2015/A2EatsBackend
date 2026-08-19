@@ -52,6 +52,12 @@ def create_checkin(
             detail=f"Too far from restaurant ({int(distance)} ft, max {checkin_rules.MAX_DISTANCE_FEET})",
         )
 
+    if checkin_rules.daily_limit_reached(current_user.id):
+        raise HTTPException(
+            status_code=429,
+            detail=f"Daily limit of {checkin_rules.MAX_CHECKINS_PER_DAY} check-ins reached",
+        )
+
     wait = checkin_rules.seconds_until_next_checkin(current_user.id)
     if wait > 0:
         raise HTTPException(

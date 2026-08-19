@@ -1,0 +1,24 @@
+# JetBrains Rider / IntelliJ
+.idea/
+*.sln.iml
+*.iml
+*.ipr
+*.iws
+
+# Rider plugin / local workspace caches
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/usage.statistics.xml
+.idea/**/dictionaries/
+.idea/**/shelf/
+
+# Optional local history and HTTP client scratch files
+.idea/**/httpRequests/
+.idea/**/dataSources/
+.idea/**/dataSources.local.xml
+
+# .NET build output (Debug/Release, generated files)
+bin/
+obj/
+Debug/
+Release/

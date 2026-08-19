@@ -10,14 +10,15 @@ from app.db import get_db
 from app.models.checkin import Checkin
 from app.models.restaurant import Restaurant
 from app.models.user import User
+from app.services import checkin_rules
 
 router = APIRouter(prefix="/checkins", tags=["checkins"])
-
-POINTS_PER_CHECKIN = 10
 
 
 class CheckinCreate(BaseModel):
     restaurant_id: int
+    latitude: float
+    longitude: float
     photo_url: str | None = None
 
 
@@ -38,14 +39,47 @@ def create_checkin(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    if db.get(Restaurant, body.restaurant_id) is None:
+    restaurant = db.get(Restaurant, body.restaurant_id)
+    if restaurant is None:
         raise HTTPException(status_code=404, detail="Restaurant not found")
+
+    distance = checkin_rules.distance_feet(
+        body.latitude, body.longitude, restaurant.latitude, restaurant.longitude
+    )
+    if distance > checkin_rules.MAX_DISTANCE_FEET:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Too far from restaurant ({int(distance)} ft, max {checkin_rules.MAX_DISTANCE_FEET})",
+        )
+
+    wait = checkin_rules.seconds_until_next_checkin(current_user.id)
+    if wait > 0:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Enjoy your meal first — next check-in in {wait // 60 + 1} minutes",
+        )
+
+    if not checkin_rules.is_travel_plausible(current_user.id, body.latitude, body.longitude):
+        raise HTTPException(
+            status_code=400,
+            detail="Location check failed",
+        )
+
+    if checkin_rules.is_rate_limited(current_user.id, body.restaurant_id):
+        raise HTTPException(
+            status_code=409,
+            detail="Already checked in here in the last 24 hours",
+        )
+
+    points = checkin_rules.award_points(
+        db, current_user.id, body.restaurant_id, body.latitude, body.longitude
+    )
 
     checkin = Checkin(
         user_id=current_user.id,
         restaurant_id=body.restaurant_id,
         photo_url=body.photo_url,
-        points=POINTS_PER_CHECKIN,
+        points=points,
     )
     db.add(checkin)
     db.commit()

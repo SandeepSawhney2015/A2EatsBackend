@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+import secrets
+
+from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -6,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.db import get_db
 from app.models.restaurant import Restaurant
 from app.services import stats
+from app.core.config import get_settings
 
 router = APIRouter(prefix="/restaurants", tags=["restaurants"])
 
@@ -32,7 +35,14 @@ class RestaurantDetailResponse(RestaurantResponse):
 
 
 @router.post("", response_model=RestaurantResponse, status_code=201)
-def create_restaurant(body: RestaurantCreate, db: Session = Depends(get_db)):
+def create_restaurant(
+    body: RestaurantCreate,
+    db: Session = Depends(get_db),
+    x_admin_token: str = Header(),
+):
+    expected = get_settings().restaurant_secret_token
+    if not expected or not secrets.compare_digest(x_admin_token, expected):
+        raise HTTPException(status_code=401, detail="Invalid admin token, please try again")
     restaurant = Restaurant(**body.model_dump())
     db.add(restaurant)
     db.commit()

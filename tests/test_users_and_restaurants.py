@@ -63,6 +63,12 @@ class TestRestaurants:
     def test_unknown_restaurant_detail_is_404(self, client):
         assert client.get("/restaurants/999").status_code == 404
 
+    def test_create_without_admin_token_is_rejected(self, client):
+        body = {"name": "Sneaky", "address": "x", "latitude": 0.0, "longitude": 0.0}
+        assert client.post("/restaurants", json=body).status_code == 422  # header missing
+        r = client.post("/restaurants", json=body, headers={"X-Admin-Token": "wrong"})
+        assert r.status_code == 401
+
 
 class TestHealth:
     def test_health(self, client):

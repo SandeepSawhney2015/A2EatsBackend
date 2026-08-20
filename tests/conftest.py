@@ -19,6 +19,7 @@ os.environ["S3_BUCKET"] = ""
 os.environ["S3_REGION"] = "us-east-2"
 os.environ["S3_ENDPOINT_URL"] = ""
 os.environ["S3_PUBLIC_BASE_URL"] = ""
+os.environ["RESTAURANT_SECRET_TOKEN"] = "test-admin-token"
 
 import pytest
 from fastapi.testclient import TestClient
@@ -82,6 +83,7 @@ def make_restaurant(client):
         r = client.post(
             "/restaurants",
             json={"name": name, "address": address, "latitude": lat, "longitude": lng},
+            headers={"X-Admin-Token": "test-admin-token"},
         )
         assert r.status_code == 201
         return r.json()

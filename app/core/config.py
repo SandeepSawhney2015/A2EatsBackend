@@ -13,7 +13,8 @@ class Settings(BaseSettings):
     # the user signed in and is what actually defines "session length".
     jwt_expire_minutes: int = 15
     refresh_expire_days: int = 60
-    redis_url: str = "redis://localhost:6379/0"
+    redis_url: str = ""
+    restaurant_secret_token: str = ""
 
     # S3-compatible photo storage. Works with AWS S3 (leave endpoint empty)
     # or Cloudflare R2 (set endpoint to your R2 URL). Credentials use the
